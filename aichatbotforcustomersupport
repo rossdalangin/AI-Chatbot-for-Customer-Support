@@ -40,40 +40,47 @@ add_action('wp_footer', 'ai_chatbot_display');
 function ai_chatbot_ajax_handler() {
     $message = sanitize_text_field($_POST['message']);
     $api_key = get_option('ai_chatbot_api_key');
-    
+
     if (empty($api_key)) {
         echo json_encode(array('response' => 'AI Chatbot is not configured. Please set the API key.'));
         wp_die();
     }
-    
-    // Check if WooCommerce is active and message is related to an order
-    if (class_exists('WooCommerce') && preg_match('/order status|track order|my order/i', $message)) {
-        $response = ai_chatbot_handle_order_request($message);
-    } else {
-        $response = wp_remote_post('https://api.openai.com/v1/chat/completions', array(
-            'headers' => array(
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer ' . $api_key
-            ),
-            'body' => json_encode(array(
-                'model' => 'gpt-4',
-                'messages' => array(
-                    array('role' => 'system', 'content' => 'You are a helpful customer support chatbot.'),
-                    array('role' => 'user', 'content' => $message)
-                )
-            )),
-            'timeout' => 15
-        ));
-    }
-    
+
+    // Call OpenAI API
+    $response = wp_remote_post('https://api.openai.com/v1/chat/completions', array(
+        'headers' => array(
+            'Content-Type'  => 'application/json',
+            'Authorization' => 'Bearer ' . $api_key
+        ),
+        'body'    => json_encode(array(
+            'model'    => 'gpt-4',
+            'messages' => array(
+                array('role' => 'system', 'content' => 'You are a helpful customer support chatbot.'),
+                array('role' => 'user', 'content' => $message)
+            )
+        )),
+        'timeout' => 15
+    ));
+
     if (is_wp_error($response)) {
         echo json_encode(array('response' => 'Error communicating with AI service.'));
-    } else {
-        $body = wp_remote_retrieve_body($response);
-        echo $body;
+        wp_die();
     }
+
+    // Retrieve response body
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+
+    // Check if API returned a valid message
+    if (isset($data['choices'][0]['message']['content'])) {
+        echo json_encode(array('response' => $data['choices'][0]['message']['content']));
+    } else {
+        echo json_encode(array('response' => 'No valid response from AI.'));
+    }
+    
     wp_die();
 }
+
 add_action('wp_ajax_ai_chatbot_send', 'ai_chatbot_ajax_handler');
 add_action('wp_ajax_nopriv_ai_chatbot_send', 'ai_chatbot_ajax_handler');
 
