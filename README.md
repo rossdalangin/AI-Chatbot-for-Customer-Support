@@ -1,74 +1,69 @@
-# AI-Chatbot-for-Customer-Support
-The AI Chatbot for Customer Support plugin is designed to enhance customer service on your WordPress website. This AI-powered chatbot provides 24/7 support, answers frequently asked questions, processes orders, and escalates complex issues to human agents.
+# AI Chatbot for Customer Support
 
-AI Chatbot for Customer Support - Documentation & Installation
+## Plugin Information
+- **Plugin Name:** AI Chatbot for Customer Support
+- **Plugin URI:** https://layunin.com
+- **Description:** An AI-powered chatbot for WordPress that provides 24/7 customer support, answers FAQs, processes orders, and escalates complex issues to human agents.
+- **Version:** 1.3
+- **Author:** Ross Dalangin
+- **Author URI:** https://layunin.com
+- **License:** GPL2
 
-Plugin Overview
+## Features
+- Provides automated customer support using AI
+- Answers FAQs and assists with WooCommerce orders
+- Supports OpenAI GPT and Google Gemini AI models
+- Escalates complex queries to human agents
+- Customizable chatbot interface
 
-The AI Chatbot for Customer Support plugin is designed to enhance customer service on your WordPress website. This AI-powered chatbot provides 24/7 support, answers frequently asked questions, processes orders, and escalates complex issues to human agents.
+## Installation
+1. Download the plugin and upload it to the `/wp-content/plugins/` directory.
+2. Activate the plugin through the 'Plugins' menu in WordPress.
+3. Navigate to **Settings > AI Chatbot** and enter your OpenAI or Google Gemini API key.
 
-Features
+## Usage
+- The chatbot will automatically appear on your website.
+- Customers can interact with it by typing questions into the chat interface.
+- The chatbot processes requests using OpenAI or Google Gemini and responds accordingly.
+- If the chatbot detects an order inquiry, it will fetch order details from WooCommerce.
 
-AI-powered chatbot using OpenAI GPT-4
+## API Integration
+### OpenAI API (Primary)
+- The chatbot first attempts to process responses using OpenAI's `gpt-3.5-turbo` model.
+- Requires an OpenAI API key, which can be configured in the plugin settings.
 
-WooCommerce integration for order tracking
+### Google Gemini API (Fallback)
+- If OpenAI quota is exceeded, the chatbot will switch to Google Gemini.
+- Requires a Google API key configured in the plugin settings.
 
-Customizable chatbot appearance
+## AJAX and API Communication
+- The chatbot sends messages via AJAX to `admin-ajax.php`.
+- The plugin makes an API call to OpenAI first; if that fails, it switches to Google Gemini.
+- Responses are displayed in real-time on the chatbot interface.
 
-Simple settings panel for API configuration
+## WooCommerce Order Support
+- Users can request their order status by providing an order ID.
+- The chatbot checks WooCommerce orders and responds with the current status.
 
-AJAX-powered real-time chat functionality
+## Plugin Settings
+- Go to **Settings > AI Chatbot** in the WordPress admin panel.
+- Enter your OpenAI API key.
+- Enter your Google Gemini API key (optional, used as a backup AI provider).
+- Save the settings.
 
-Installation Instructions
+## Troubleshooting
+### No Response from Chatbot
+- Ensure API keys are correctly entered.
+- Check API quota limits for OpenAI and Google Gemini.
+- Ensure your WordPress site has internet access.
 
-1. Install the Plugin
+### Incorrect Order Information
+- Ensure the order ID provided is correct.
+- Check WooCommerce settings to ensure orders are being processed correctly.
 
-Download the plugin ZIP file.
+## Future Enhancements
+- Support for additional AI models
+- Improved UI customization options
+- Integration with CRM systems
 
-Navigate to WordPress Admin > Plugins > Add New.
-
-Click Upload Plugin, choose the ZIP file, and click Install Now.
-
-After installation, click Activate.
-
-2. Configure API Key
-
-Go to WordPress Admin > Settings > AI Chatbot.
-
-Enter your OpenAI API key in the provided field.
-
-Click Save to apply changes.
-
-3. Add the Chatbot to Your Website
-
-The chatbot will automatically appear in the footer of your website. No additional setup is required.
-
-Usage Instructions
-
-Visitors can open the chatbot and enter queries.
-
-The chatbot will respond using AI-generated responses.
-
-If a customer inquires about an order, they should provide their order ID.
-
-The chatbot retrieves WooCommerce order status and displays it to the user.
-
-Troubleshooting
-
-Chatbot not appearing? Ensure that the plugin is activated and your theme supports wp_footer().
-
-API error messages? Verify that you have entered a valid OpenAI API key.
-
-WooCommerce orders not being found? Ensure WooCommerce is installed and the order ID provided is correct.
-
-Uninstallation
-
-Navigate to WordPress Admin > Plugins.
-
-Locate AI Chatbot for Customer Support.
-
-Click Deactivate, then Delete.
-
-(Optional) Remove stored API key by deleting the ai_chatbot_api_key option from the database.
-
-For further assistance, visit http://layunin.com or contact support.
+For further assistance, visit [https://layunin.com](https://layunin.com).
