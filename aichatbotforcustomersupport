@@ -1,0 +1,114 @@
+<?php
+/*
+Plugin Name: AI Chatbot for Customer Support
+Plugin URI: https://layunin.com
+Description: An AI-powered chatbot for WordPress to provide 24/7 customer support, answer FAQs, process orders, and escalate complex issues to human agents.
+Version: 1.2
+Author: Ross Dalangin
+Author URI: https://layunin.com
+License: GPL2
+*/
+
+// Exit if accessed directly
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+// Enqueue Scripts and Styles
+function ai_chatbot_enqueue_scripts() {
+    wp_enqueue_script('ai-chatbot-js', plugin_dir_url(__FILE__) . 'chatbot.js', array('jquery'), '1.0', true);
+    wp_enqueue_style('ai-chatbot-css', plugin_dir_url(__FILE__) . 'chatbot.css');
+    
+    wp_localize_script('ai-chatbot-js', 'aiChatbot', array(
+        'ajax_url' => admin_url('admin-ajax.php')
+    ));
+}
+add_action('wp_enqueue_scripts', 'ai_chatbot_enqueue_scripts');
+
+// Create Chatbot HTML
+function ai_chatbot_display() {
+    echo '<div id="ai-chatbot">
+            <div id="chatbot-header">Chat with Us</div>
+            <div id="chatbot-messages"></div>
+            <input type="text" id="chatbot-input" placeholder="Type a message...">
+            <button id="chatbot-send">Send</button>
+          </div>';
+}
+add_action('wp_footer', 'ai_chatbot_display');
+
+// AJAX handler to communicate with OpenAI API
+function ai_chatbot_ajax_handler() {
+    $message = sanitize_text_field($_POST['message']);
+    $api_key = get_option('ai_chatbot_api_key');
+    
+    if (empty($api_key)) {
+        echo json_encode(array('response' => 'AI Chatbot is not configured. Please set the API key.'));
+        wp_die();
+    }
+    
+    // Check if WooCommerce is active and message is related to an order
+    if (class_exists('WooCommerce') && preg_match('/order status|track order|my order/i', $message)) {
+        $response = ai_chatbot_handle_order_request($message);
+    } else {
+        $response = wp_remote_post('https://api.openai.com/v1/chat/completions', array(
+            'headers' => array(
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer ' . $api_key
+            ),
+            'body' => json_encode(array(
+                'model' => 'gpt-4',
+                'messages' => array(
+                    array('role' => 'system', 'content' => 'You are a helpful customer support chatbot.'),
+                    array('role' => 'user', 'content' => $message)
+                )
+            )),
+            'timeout' => 15
+        ));
+    }
+    
+    if (is_wp_error($response)) {
+        echo json_encode(array('response' => 'Error communicating with AI service.'));
+    } else {
+        $body = wp_remote_retrieve_body($response);
+        echo $body;
+    }
+    wp_die();
+}
+add_action('wp_ajax_ai_chatbot_send', 'ai_chatbot_ajax_handler');
+add_action('wp_ajax_nopriv_ai_chatbot_send', 'ai_chatbot_ajax_handler');
+
+// Handle WooCommerce Order Requests
+function ai_chatbot_handle_order_request($message) {
+    if (preg_match('/\b(\d{3,})\b/', $message, $matches)) {
+        $order_id = intval($matches[1]);
+        $order = wc_get_order($order_id);
+        
+        if ($order) {
+            return json_encode(array('response' => 'Your order #' . $order_id . ' is currently ' . wc_get_order_status_name($order->get_status()) . '.'));
+        } else {
+            return json_encode(array('response' => 'Sorry, I could not find an order with that ID. Please check and try again.'));
+        }
+    }
+    return json_encode(array('response' => 'Please provide your order ID to check the status.'));
+}
+
+// Plugin settings page
+function ai_chatbot_settings_menu() {
+    add_options_page('AI Chatbot Settings', 'AI Chatbot', 'manage_options', 'ai-chatbot', 'ai_chatbot_settings_page');
+}
+add_action('admin_menu', 'ai_chatbot_settings_menu');
+
+function ai_chatbot_settings_page() {
+    if (isset($_POST['ai_chatbot_api_key'])) {
+        update_option('ai_chatbot_api_key', sanitize_text_field($_POST['ai_chatbot_api_key']));
+    }
+    $api_key = get_option('ai_chatbot_api_key', '');
+    echo '<div class="wrap">
+            <h1>AI Chatbot Settings</h1>
+            <form method="post">
+                <label for="ai_chatbot_api_key">OpenAI API Key:</label>
+                <input type="text" name="ai_chatbot_api_key" value="' . esc_attr($api_key) . '" size="50">
+                <input type="submit" value="Save" class="button-primary">
+            </form>
+          </div>';
+}
